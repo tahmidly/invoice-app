@@ -20,14 +20,14 @@ export default function ReceiptDisplay({ data }: ReceiptDisplayProps) {
 
   const confidenceColor =
     data.confidence > 0.8
-      ? "bg-green-100 text-green-800"
+      ? "bg-[#D946EF] text-white"
       : data.confidence > 0.6
         ? "bg-yellow-100 text-yellow-800"
         : "bg-orange-100 text-orange-800"
 
   return (
     <div className="space-y-6">
-      <Card>
+      <div className="bg-[#091D30] text-white rounded-3xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -59,20 +59,20 @@ export default function ReceiptDisplay({ data }: ReceiptDisplayProps) {
 
             <TabsContent value="table" className="space-y-6 mt-6">
               {/* Merchant Information */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <div className="flex items-center gap-2 text-sm font-medium ">
                     <Store className="h-4 w-4" />
                     Merchant
                   </div>
                   <div>
                     <p className="font-semibold">{data.merchantName || "Not detected"}</p>
-                    {data.merchantAddress && <p className="text-sm text-gray-600">{data.merchantAddress}</p>}
+                    {data.merchantAddress && <p className="text-sm ">{data.merchantAddress}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <div className="flex items-center gap-2 text-sm font-medium">
                     <Calendar className="h-4 w-4" />
                     Date
                   </div>
@@ -85,19 +85,19 @@ export default function ReceiptDisplay({ data }: ReceiptDisplayProps) {
               {/* Items */}
               {data.items.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Items</h3>
-                  <div className="space-y-2">
+                  <h3 className=" text-[#D946EF] text-2xl">Items</h3>
+                  <div className="space-y-2 overflow-x-auto">
                     {data.items.map((item, index) => (
-                      <div key={index} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex flex-col md:flex-row justify-between items-start p-3 bg-gray-50 rounded-lg min-w-[250px]">
                         <div className="flex-1">
-                          <p className="font-medium">{item.description}</p>
+                          <p className="font-medium text-gray-600">{item.description}</p>
                           {item.quantity && item.unitPrice && (
                             <p className="text-sm text-gray-600">
                               {item.quantity} × {formatCurrency(item.unitPrice)}
                             </p>
                           )}
                         </div>
-                        {item.totalPrice && <p className="font-semibold">{formatCurrency(item.totalPrice)}</p>}
+                        {item.totalPrice && <p className="font-semibold text-gray-600">{formatCurrency(item.totalPrice)}</p>}
                       </div>
                     ))}
                   </div>
@@ -108,8 +108,8 @@ export default function ReceiptDisplay({ data }: ReceiptDisplayProps) {
 
               {/* Totals */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-                  <DollarSign className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-sm font-medium  mb-3">
+                  <DollarSign className="h-4 w-4 text-white" />
                   Summary
                 </div>
 
@@ -129,8 +129,8 @@ export default function ReceiptDisplay({ data }: ReceiptDisplayProps) {
 
                 {data.totalAmount > 0 && (
                   <div className="flex justify-between font-bold text-lg border-t pt-2">
-                    <span>Total:</span>
-                    <span>{formatCurrency(data.totalAmount)}</span>
+                    <span className="font-bold text-2xl">Total:</span>
+                    <span className="text-[#D946EF] font-bold text-2xl">{formatCurrency(data.totalAmount)}</span>
                   </div>
                 )}
               </div>
@@ -141,7 +141,7 @@ export default function ReceiptDisplay({ data }: ReceiptDisplayProps) {
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+      </div>
 
 
     </div>

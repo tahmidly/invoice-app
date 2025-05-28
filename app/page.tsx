@@ -6,6 +6,7 @@ import type { ReceiptData } from "./types/receipt"
 import ReceiptDisplay from "./components/receipt-display"
 import Dropzone from "./components/dropzone"
 import { Bot, Check, Clock, Key, Lock, PackageSearch } from "lucide-react"
+import Link from "next/link"
 
 export default function ReceiptManager() {
   const [file, setFile] = useState<File | null>(null)
@@ -52,9 +53,11 @@ export default function ReceiptManager() {
             "
             aria-hidden="true"
           ></span>
-          <span className="relative z-10  text-white transition-colors duration-300 group-hover:text-white">
-            Get Started for Free
-          </span>
+          <Link href="/receipts">
+            <span className="relative z-10  text-white transition-colors duration-300 group-hover:text-white">
+              Get Started for Free
+            </span>
+          </Link>
         </button>
       </div>
 

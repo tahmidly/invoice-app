@@ -25,8 +25,8 @@ export default function ReceiptAnalytics({ data, receipts = [data] }: ReceiptAna
 
   // Cost breakdown data
   const costBreakdown = [
-    { name: "Subtotal", value: data.subtotal || 0, color: "#3b82f6" },
-    { name: "Tax", value: data.tax || 0, color: "#ef4444" },
+    { name: "Subtotal", value: typeof data.subtotal === 'number' ? data.subtotal : 0, color: "#3b82f6" },
+    { name: "Tax", value: typeof data.tax === 'number' ? data.tax : 0, color: "#ef4444" },
   ].filter((item) => item.value > 0)
 
   // Price distribution data
@@ -55,13 +55,15 @@ export default function ReceiptAnalytics({ data, receipts = [data] }: ReceiptAna
   })
 
   // Summary statistics
-  const totalItems = data.items.length
-  const averageItemPrice = totalItems > 0 ? (data.subtotal || data.totalAmount) / totalItems : 0
-  const mostExpensiveItem = data.items.reduce(
-    (max, item) => ((item.totalPrice || 0) > (max.totalPrice || 0) ? item : max),
-    data.items[0] || { description: "N/A", totalPrice: 0 },
-  )
-  const taxRate = data.subtotal > 0 ? ((data.tax || 0) / data.subtotal) * 100 : 0
+  const totalItems = Array.isArray(data.items) ? data.items.length : 0
+  const averageItemPrice = totalItems > 0 ? ((typeof data.subtotal === 'number' ? data.subtotal : data.totalAmount) || 0) / totalItems : 0
+  const mostExpensiveItem = (Array.isArray(data.items) && data.items.length > 0)
+    ? data.items.reduce(
+        (max, item) => ((item.totalPrice || 0) > (max.totalPrice || 0) ? item : max),
+        data.items[0]
+      )
+    : { description: "N/A", totalPrice: 0 }
+  const taxRate = typeof data.subtotal === 'number' && data.subtotal > 0 ? ((typeof data.tax === 'number' ? data.tax : 0) / data.subtotal) * 100 : 0
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -128,95 +130,248 @@ export default function ReceiptAnalytics({ data, receipts = [data] }: ReceiptAna
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Items Distribution Pie Chart */}
         {itemsData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5" />
-                Items Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  value: {
-                    label: "Amount",
-                    color: "hsl(var(--chart-1))",
-                  },
-                }}
-                className="h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={itemsData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {itemsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          return (
-                            <div className="bg-white p-3 border rounded-lg shadow-lg">
-                              <p className="font-medium">{data.fullName}</p>
-                              <p className="text-sm text-gray-600">Amount: {formatCurrency(data.value)}</p>
-                              {data.quantity > 1 && <p className="text-sm text-gray-600">Quantity: {data.quantity}</p>}
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          <div className="min-w-0 overflow-x-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChartIcon className="h-5 w-5" />
+                  Items Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    value: {
+                      label: "Amount",
+                      color: "hsl(var(--chart-1))",
+                    },
+                  }}
+                  className="h-[300px] w-full"
+                >
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={itemsData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {itemsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload
+                            return (
+                              <div className="bg-white p-3 border rounded-lg shadow-lg">
+                                <p className="font-medium">{data.fullName}</p>
+                                <p className="text-sm text-gray-600">Amount: {formatCurrency(data.value)}</p>
+                                {data.quantity > 1 && <p className="text-sm text-gray-600">Quantity: {data.quantity}</p>}
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Cost Breakdown */}
         {costBreakdown.length > 0 && (
+          <div className="min-w-0 overflow-x-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Cost Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    value: {
+                      label: "Amount",
+                      color: "hsl(var(--chart-2))",
+                    },
+                  }}
+                  className="h-[300px] w-full"
+                >
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={costBreakdown} margin={{ right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis tickFormatter={(value) => `$${value}`} />
+                      <ChartTooltip
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 border rounded-lg shadow-lg">
+                                <p className="font-medium">{label}</p>
+                                <p className="text-sm text-gray-600">{formatCurrency(payload[0].value as number)}</p>
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
+                      />
+                      <Bar dataKey="value" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Price Range Distribution */}
+        <div className="min-w-0 overflow-x-auto">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Cost Breakdown
+                Price Range Distribution
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ChartContainer
                 config={{
-                  value: {
-                    label: "Amount",
-                    color: "hsl(var(--chart-2))",
+                  count: {
+                    label: "Items",
+                    color: "hsl(var(--chart-3))",
+                  },
+                  total: {
+                    label: "Total Value",
+                    color: "hsl(var(--chart-4))",
                   },
                 }}
-                className="h-[300px]"
+                className="h-[300px] w-full"
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={costBreakdown}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={priceRanges} margin={{ right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `$${value}`} />
+                    <XAxis dataKey="range" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `$${value}`} />
                     <ChartTooltip
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           return (
                             <div className="bg-white p-3 border rounded-lg shadow-lg">
                               <p className="font-medium">{label}</p>
-                              <p className="text-sm text-gray-600">{formatCurrency(payload[0].value as number)}</p>
+                              <p className="text-sm text-gray-600">Items: {payload[0].value}</p>
+                              <p className="text-sm text-gray-600">Total: {formatCurrency(payload[1].value as number)}</p>
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="count" fill="#8b5cf6" name="Number of Items" />
+                    <Bar yAxisId="right" dataKey="total" fill="#06b6d4" name="Total Value" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Item Analysis */}
+        <div className="min-w-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                Item Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-green-800">Most Expensive Item</p>
+                    <p className="text-sm text-green-600">{mostExpensiveItem.description}</p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800">
+                    {formatCurrency(mostExpensiveItem.totalPrice || 0)}
+                  </Badge>
+                </div>
+
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-blue-800">Average Item Price</p>
+                    <p className="text-sm text-blue-600">Across {totalItems} items</p>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800">{formatCurrency(averageItemPrice)}</Badge>
+                </div>
+
+                {typeof data.tax === 'number' && data.tax > 0 && (
+                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-orange-800">Tax Information</p>
+                      <p className="text-sm text-orange-600">{formatPercentage(taxRate)} rate</p>
+                    </div>
+                    <Badge className="bg-orange-100 text-orange-800">{formatCurrency(data.tax)}</Badge>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Detailed Items Bar Chart */}
+      {itemsData.length > 0 && (
+        <div className="min-w-0 overflow-x-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Items Comparison
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  value: {
+                    label: "Price",
+                    color: "hsl(var(--chart-1))",
+                  },
+                }}
+                className="h-[400px] w-full"
+              >
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={itemsData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} />
+                    <YAxis tickFormatter={(value) => `$${value}`} />
+                    <ChartTooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload
+                          return (
+                            <div className="bg-white p-3 border rounded-lg shadow-lg">
+                              <p className="font-medium">{data.fullName}</p>
+                              <p className="text-sm text-gray-600">Price: {formatCurrency(data.value)}</p>
+                              {data.quantity > 1 && (
+                                <p className="text-sm text-gray-600">
+                                  Quantity: {data.quantity} × {formatCurrency(data.unitPrice)}
+                                </p>
+                              )}
                             </div>
                           )
                         }
@@ -229,150 +384,7 @@ export default function ReceiptAnalytics({ data, receipts = [data] }: ReceiptAna
               </ChartContainer>
             </CardContent>
           </Card>
-        )}
-
-        {/* Price Range Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Price Range Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                count: {
-                  label: "Items",
-                  color: "hsl(var(--chart-3))",
-                },
-                total: {
-                  label: "Total Value",
-                  color: "hsl(var(--chart-4))",
-                },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={priceRanges}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="range" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `$${value}`} />
-                  <ChartTooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white p-3 border rounded-lg shadow-lg">
-                            <p className="font-medium">{label}</p>
-                            <p className="text-sm text-gray-600">Items: {payload[0].value}</p>
-                            <p className="text-sm text-gray-600">Total: {formatCurrency(payload[1].value as number)}</p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="count" fill="#8b5cf6" name="Number of Items" />
-                  <Bar yAxisId="right" dataKey="total" fill="#06b6d4" name="Total Value" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Item Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5" />
-              Item Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-green-800">Most Expensive Item</p>
-                  <p className="text-sm text-green-600">{mostExpensiveItem.description}</p>
-                </div>
-                <Badge className="bg-green-100 text-green-800">
-                  {formatCurrency(mostExpensiveItem.totalPrice || 0)}
-                </Badge>
-              </div>
-
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-blue-800">Average Item Price</p>
-                  <p className="text-sm text-blue-600">Across {totalItems} items</p>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800">{formatCurrency(averageItemPrice)}</Badge>
-              </div>
-
-              {data.tax > 0 && (
-                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-orange-800">Tax Information</p>
-                    <p className="text-sm text-orange-600">{formatPercentage(taxRate)} rate</p>
-                  </div>
-                  <Badge className="bg-orange-100 text-orange-800">{formatCurrency(data.tax)}</Badge>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Detailed Items Bar Chart */}
-      {itemsData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Items Comparison
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                value: {
-                  label: "Price",
-                  color: "hsl(var(--chart-1))",
-                },
-              }}
-              className="h-[400px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={itemsData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} />
-                  <YAxis tickFormatter={(value) => `$${value}`} />
-                  <ChartTooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white p-3 border rounded-lg shadow-lg">
-                            <p className="font-medium">{data.fullName}</p>
-                            <p className="text-sm text-gray-600">Price: {formatCurrency(data.value)}</p>
-                            {data.quantity > 1 && (
-                              <p className="text-sm text-gray-600">
-                                Quantity: {data.quantity} × {formatCurrency(data.unitPrice)}
-                              </p>
-                            )}
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-                  <Bar dataKey="value" fill="#3b82f6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        </div>
       )}
     </div>
   )
