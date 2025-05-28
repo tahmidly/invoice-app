@@ -53,7 +53,7 @@ export default function ReceiptsPage() {
     }
 
     return (
-        <div className="min-h-screen w-full flex items-stretch justify-center py-12 px-4 bg-[#0a192f]">
+        <div className="min-h-screen w-full flex items-stretch justify-center py-12 px-4 ">
             <div className="w-full max-w-[1600px] grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                 <div className="flex flex-col items-center justify-center min-h-[600px]">
                     <Dropzone
