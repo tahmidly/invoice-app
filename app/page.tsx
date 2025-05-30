@@ -20,8 +20,11 @@ export default function ReceiptManager() {
     <div className="min-h-screen  p-4">
       <div className="text-center mt-10">
         <span className="border p-2 rounded-full text-[13px]  border-[#99a1af] text-[#99a1af] px-7">AI Powered Productivity Tools</span>
-        <h1 className="text-[48px] leading-[56px] mt-4  font-bold text-center bg-gradient-to-r from-[#FF6FD8] via-[#FFD86F] to-[#6FC3FF] bg-clip-text text-transparent drop-shadow-lg">
-          The Most Powerful AI for Invoice <br /> Data Extraction
+        <h1 className="text-[36px] lg:text-[48px] leading-[56px]  mt-4 font-bold text-center bg-gradient-to-r from-[#FF6FD8] via-[#FFD86F] to-[#6FC3FF] bg-clip-text text-transparent drop-shadow-lg">
+          The Most Powerful AI for Invoice
+          <span className="hidden lg:inline"><br /></span>
+          <span className="inline lg:hidden"> </span>
+          Data Extraction
         </h1>
         <p className="text-[18px] text-[#99a1af] mt-8">Save hours of manual work. Upload your invoices and let AI extract every piece of information <br /> with precision.</p>
         <button
