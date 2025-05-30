@@ -8,17 +8,15 @@ import ReceiptDisplay from "../components/receipt-display"
 export default function ReceiptsPage() {
     const [file, setFile] = useState<File | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
-    const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
+    const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)    
     const [error, setError] = useState<string | null>(null)
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = event.target.files?.[0]
-        if (selectedFile && selectedFile.type === "application/pdf") {
+        if (selectedFile) {
             setFile(selectedFile)
             setError(null)
             setReceiptData(null)
-        } else {
-            setError("Please select a PDF file")
         }
     }
 

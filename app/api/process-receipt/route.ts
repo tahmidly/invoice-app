@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
 
       // Try Gemini directly with the image
       try {
-        const result = await processImageWithGemini(base64Content, apiKey)
+        const mimeType = file.type || "application/pdf"
+        const result = await processImageWithGemini(base64Content, apiKey, mimeType)
         return NextResponse.json(result)
       } catch (geminiError) {
         console.log("Gemini failed, using basic processing:", geminiError)
@@ -183,7 +184,7 @@ Rules:
   }
 }
 
-async function processImageWithGemini(base64Content: string, apiKey: string) {
+async function processImageWithGemini(base64Content: string, apiKey: string, mimeType: string) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
 
   const prompt = `
@@ -224,7 +225,7 @@ Rules:
           },
           {
             inline_data: {
-              mime_type: "application/pdf",
+              mime_type: mimeType,
               data: base64Content,
             },
           },

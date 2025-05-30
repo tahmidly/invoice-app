@@ -24,29 +24,9 @@ export default function Dropzone({ file, isProcessing, error, onFileChange, onPr
     fileInputRef.current?.click()
   }
 
-  const isSupportedFile = (file: File) => {
-    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg']
-    return allowedTypes.includes(file.type)
-  }
-
-  const validateAndHandleFile = (file: File) => {
-    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg']
-    if (!allowedTypes.includes(file.type)) {
-      setLocalError("Only PDF, PNG, or JPG files are allowed")
-      return false
-    }
-    setLocalError(null)
-    return true
-  }
-
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      if (validateAndHandleFile(file)) {
-        onFileChange(e)
-      } else {
-        e.target.value = '' // Reset the input
-      }
+      onFileChange(e)
     }
   }
 
@@ -65,11 +45,6 @@ export default function Dropzone({ file, isProcessing, error, onFileChange, onPr
     setIsDraggingOver(false)
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      if (!validateAndHandleFile(file)) {
-        return
-      }
-
       const fileInput = document.getElementById('file-upload') as HTMLInputElement
       if (fileInput) {
         fileInput.files = e.dataTransfer.files
